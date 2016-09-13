@@ -1,0 +1,37 @@
+{
+  "name": "cs5400",
+  "version": "1.0.0",
+  "description": "all programs for cs5400",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jonathan Arndt",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-cli": "^6.14.0",
+    "graceful-fs": "^4.1.6",
+    "grunt": "^0.4.5",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-compass": "^1.1.1",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^1.0.2",
+    "grunt-contrib-htmlmin": "^2.0.0",
+    "grunt-contrib-imagemin": "^1.0.1",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-contrib-less": "^1.4.0",
+    "grunt-contrib-nodeunit": "~0.4.1",
+    "grunt-contrib-uglify": "^0.5.1",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-express": "^1.4.1",
+    "grunt-open": "^0.2.3",
+    "install": "^0.8.1",
+    "jshint-stylish": "^2.2.1",
+    "matchdep": "^1.0.1",
+    "minimatch": "^3.0.3",
+    "npm": "^3.10.7",
+    "webgl-context": "^2.2.0",
+    "webgl-enabled": "^1.0.3"
+  }
+}
