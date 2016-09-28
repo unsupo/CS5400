@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Serpinksi Mountain</title>
+
+        <script type="text/javascript" src="../common/glMatrix-0.9.5.min.js"></script>
+
+        <script id="shader-fs" type="x-shader/x-fragment">
+            precision mediump float;
+
+            varying vec4 vColor;
+
+            void main(void) {
+                gl_FragColor = vColor;
+            }
+        </script>
+
+        <script id="shader-vs" type="x-shader/x-vertex">
+            attribute vec3 aVertexPosition;
+            attribute vec4 aVertexColor;
+
+            uniform mat4 uMVMatrix;
+            uniform mat4 uPMatrix;
+
+            varying vec4 vColor;
+
+            void main(void) {
+                gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+                vColor = aVertexColor;
+            }
+        </script>
+
+
+        <script type="text/javascript" src="../dragon/Common/webgl-utils.js"></script>
+        <script type="text/javascript" src="../dragon/Common/initShaders.js"></script>
+        <script type="text/javascript" src="../dragon/Common/MV.js"></script>
+        <script type="text/javascript" src="../dragon/Common/configWebgl.js"></script>
+        <script type="text/javascript" src="../dragon/Common/logic.js"></script>
+
+
+        <script type="text/javascript" src="../common/initializeWebGL.js"></script>
+        <script type="text/javascript" src="../common/webgl-utils.js"></script>
+        <script type="text/javascript" src="script.js"></script>
+    </head>
+    <body>
+        <body onload="webGLStart()">
+            <canvas id="gl-canvas" width="512" height="512">
+                Oops ... your browser doesn't support the HTML5 canvas element
+            </canvas>
+        </body>
+    </body>
+</html>
