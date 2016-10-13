@@ -9,6 +9,7 @@ function webGLStart() {
         "resources/cubetexture.png", //wall
         "resources/tile.jpg", //ceiling
         "resources/ceiling.png", //floor
+        "resources/end.png", //end
     ];
     for(var i = 0; i<images.length; i++)
         switch (i) {
@@ -21,11 +22,15 @@ function webGLStart() {
             case 2:
                 textures.floor = initTexture(images[i]);
                 break;
+            case 3:
+                textures.end = initTexture(images[i]);
+                break;
         }
 
     if(!mazeDraw) {
+        var hasCeiling = true;
         var m = new Maze(10, 10);
-        var v = m.drawMaze();
+        var v = m.drawMaze(hasCeiling);
         for(var i = 0; i<v.length; i++)
             objects.push(v[i]);
     }
@@ -39,6 +44,7 @@ var textures = {
     wall: null,
     floor: null,
     ceiling: null,
+    end: null,
 };
 
 var mazeDraw = false;

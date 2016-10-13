@@ -106,19 +106,24 @@ function Maze(width, height) {
 
     self.objects = [];
 
-    self.drawMaze = function() {
+    self.drawMaze = function(hasCeiling) {
         var m = new Maze(10,10);
 
         for(var i = 0; i<m.cells.length; i++)
             for(var j = 0; j<m.cells[i].length; j++)
-                self.drawCell(m.cells[i][j]);
+                self.drawCell(m.cells[i][j],hasCeiling);
 
         return self.objects;
     }
 
-    self.drawCell = function(cell) {
+    self.drawCell = function(cell,hasCeiling) {
         if(!cell)
             return;
+        if(!hasCeiling)
+            hasCeiling = false;
+        var isEnd = false;
+        if(cell.x == self.cells.length-1 && cell.y == self.cells.length-1)
+            isEnd = true;
 
         var x = cell.x*4.5;
         var y = cell.y*4.5;
@@ -126,6 +131,8 @@ function Maze(width, height) {
             var c = new Cube(2.5, 1, .25);
             c.translate(0+x, 0, 0+y);
             c.texture = textures.wall;
+            if(isEnd)
+                c.texture = textures.end;
             c.buildObject();
             self.objects.push(c);
         }
@@ -135,6 +142,8 @@ function Maze(width, height) {
             c1.translate(-2.25+y, 0, -2.25-x);
             c1.buildObject();
             c1.texture = textures.wall;
+            if(isEnd)
+                c1.texture = textures.end;
             self.objects.push(c1);
         }
         if(cell.walls.left) {
@@ -143,6 +152,8 @@ function Maze(width, height) {
             c2.translate(-2.25+y, 0, 2.25-x);
             c2.buildObject();
             c2.texture = textures.wall;
+            if(isEnd)
+                c2.texture = textures.end;
             self.objects.push(c2);
         }
         if(cell.walls.up) {
@@ -150,6 +161,8 @@ function Maze(width, height) {
             c3.translate(0+x, 0, -4.5+y);
             c3.buildObject();
             c3.texture = textures.wall;
+            if(isEnd)
+                c3.texture = textures.end;
             self.objects.push(c3);
         }
 
@@ -157,12 +170,18 @@ function Maze(width, height) {
         floor.translate(x,-1.25,-2.25+y);
         floor.buildObject();
         floor.texture = textures.floor;
+        if(isEnd)
+            floor.texture = textures.end;
         self.objects.push(floor);
 
-        // var ceiling = new Cube(2.5,.25,2.5);
-        // ceiling.translate(x,0,y);
-        // ceiling.buildObject();
-        // ceiling.texture = textures.ceiling;
-        // self.objects.push(ceiling);
+        if(hasCeiling) {
+            var ceiling = new Cube(2.5, .25, 2.5);
+            ceiling.translate(x, 1.25,-2.25+y);
+            ceiling.buildObject();
+            ceiling.texture = textures.ceiling;
+            if(isEnd)
+                ceiling.texture = textures.end;
+            self.objects.push(ceiling);
+        }
     }
 }
