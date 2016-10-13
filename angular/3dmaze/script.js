@@ -51,8 +51,8 @@ function tick() {
 }
 
 
-var height = 2;
-var timeOfJump = 2;//in seconds
+var height = 3;
+var timeOfJump = 1;//in seconds
 var yOfGround = 0.4;
 
 var pitch = 0;
@@ -99,8 +99,12 @@ function handleKeys() {
         ySpeed = -0.003;
 
     if(KeyInput.isPressed(KeyInput.KEY_NAMES.SPACE)) {
-        // var now = new Date().getTime();
-        jump = true;
+        var now = new Date().getTime();
+        if(spaceKeyPressTime < 0 || now - spaceKeyPressTime > 1000) {
+            jump = true;
+            spaceKeyPressTime = now;
+        }
+
         // if(++spaceBarPressCount > 8)
         //     spaceBarPressCount=0;
         // if(spaceKeyPressTime<0)
@@ -118,8 +122,9 @@ function handleKeys() {
         //     flyHeight = 0.00003;
         // }
         // console.log("Space Bar Pressed");
-    }else if(KeyInput.isPressed(KeyInput.KEY_NAMES.SHIFT) && fly)
-        flyHeight = -0.00003;
+    }
+    // else if(KeyInput.isPressed(KeyInput.KEY_NAMES.SHIFT) && fly)
+    //     flyHeight = -0.00003;
 
 }
 
@@ -138,16 +143,16 @@ function animate() {
             zPos -= xSpeed * elapsed*Math.cos(degToRad(yaw));
             joggingAngle += elapsed * 0.4; // 0.6 "fiddle factor" - makes it feel more realistic :-)
             // if(!fly)
-                yPos =0.4 +  Math.sin(degToRad(joggingAngle)) / 20; //y moves up and down in a sin wave
+                yPos =yOfGround +  Math.sin(degToRad(joggingAngle)) / 20; //y moves up and down in a sin wave
         }
         if(jump){
             if(jumpStartTime < 0)
-                jumpStartTime = timeNow - 10;
+                jumpStartTime = timeNow;
 
             var t = timeNow - jumpStartTime;
             t/=1000;
             //y(t) = Height - (t - T/2)² + y_of_the_ground
-            yPos += height - Math.pow(t - timeOfJump/2,2);
+            yPos = height - Math.pow(t - Math.sqrt(height),2) + yOfGround;
 
             if(yPos <= yOfGround){
                 yPos = yOfGround;
