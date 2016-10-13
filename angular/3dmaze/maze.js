@@ -123,7 +123,7 @@ function Maze(width, height) {
         var x = cell.x*4.5;
         var y = cell.y*4.5;
         if(cell.walls.down) {
-            var c = new Cube(2, 1, .25);
+            var c = new Cube(2.5, 1, .25);
             c.translate(0+x, 0, 0+y);
             c.texture = textures.wall;
             c.buildObject();
@@ -132,7 +132,7 @@ function Maze(width, height) {
         if(cell.walls.right) {
             var c1 = new Cube(2.5, 1, .25);
             c1.rotate(90, 0, 1, 0);
-            c1.translate(-2.25+x, 0, -2.25-y);
+            c1.translate(-2.25+y, 0, -2.25-x);
             c1.buildObject();
             c1.texture = textures.wall;
             self.objects.push(c1);
@@ -140,13 +140,13 @@ function Maze(width, height) {
         if(cell.walls.left) {
             var c2 = new Cube(2.5, 1, .25);
             c2.rotate(90, 0, 1, 0);
-            c2.translate(-2.25+x, 0, 2.25-y);
+            c2.translate(-2.25+y, 0, 2.25-x);
             c2.buildObject();
             c2.texture = textures.wall;
             self.objects.push(c2);
         }
         if(cell.walls.up) {
-            var c3 = new Cube(2, 1, .25);
+            var c3 = new Cube(2.5, 1, .25);
             c3.translate(0+x, 0, -4.5+y);
             c3.buildObject();
             c3.texture = textures.wall;

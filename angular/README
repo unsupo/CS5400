@@ -1,0 +1,52 @@
+To run the 3dmaze project, a server must be started.  I've created a small script to start a server.
+The script must be run from the directory at the same level as the folders, not inside the folders.
+The script runs this command so you may just run it yourself from that location:
+
+python -m SimpleHTTPServer
+
+Obviously python must be installed on your machine, otherwise i suggest you run it from your own
+server or just view it on my website at:
+
+http://jonathancarndt.com
+
+
+Then if you've chosen to run it locally using the python command above the go to the follow link
+in your browser:
+
+http://localhost:8000/3dmaze/
+
+This will serve the html file from the 3dmaze directory and allow access the the commons folder one
+directory back.
+
+Just to clarify the structure must be
+
+3dmaze/
+   index.html
+   maze.js
+   script.js
+   resources/
+      ceiling.png
+      cubetexture.png
+      tile.jpg
+common/
+   basics.js
+   configWebgl.js
+   cube.js
+   glMatrix-0.9.5.min.js
+   glUtils.js
+   initializeWebGL.js
+   initShaders.js
+   keyinput.js
+   logic.js
+   MV.js
+   sylvester.js
+   webgl-utils.js
+
+runMe.sh
+
+notice the runMe.sh is just outside the two folders, this is by design and where the program should be run
+like the following:
+
+./runMe.sh
+
+

@@ -7,7 +7,7 @@
     <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
     <script type="text/javascript" src="webgl-utils.js"></script>
     <script type="text/javascript" src="../common/initializeWebGL.js"></script>
-    <script type="text/javascript" src="../dragon/Common/MV.js"></script>
+    <script type="text/javascript" src="../common/MV.js"></script>
     <script type="text/javascript" src="../common/cube.js"></script>
     <script type="text/javascript" src="../3dmaze/maze.js"></script>
 
@@ -201,11 +201,8 @@
                         break;
                 }
 
-
-//            initBuffers();
-
             if(!mazeDraw) {
-                var m = new Maze(10, 10);
+                var m = new Maze(5, 5);
                 var v = m.drawMaze();
                 for(var i = 0; i<v.length; i++)
                     objects.push(v[i]);
