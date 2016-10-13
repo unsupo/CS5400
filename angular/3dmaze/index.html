@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3-D Maze</title>
+
+    <script type="text/javascript" src="../common/glMatrix-0.9.5.min.js"></script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+
+        varying vec2 vTextureCoord;
+
+        uniform sampler2D uSampler;
+
+        void main(void) {
+            gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        }
+    </script>
+
+        <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        varying vec2 vTextureCoord;
+
+        void main(void) {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vTextureCoord = aTextureCoord;
+        }
+    </script>
+
+
+    <script type="text/javascript" src="../dragon/Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="../dragon/Common/initShaders.js"></script>
+    <script type="text/javascript" src="../dragon/Common/MV.js"></script>
+    <script type="text/javascript" src="../dragon/Common/configWebgl.js"></script>
+    <script type="text/javascript" src="../dragon/Common/logic.js"></script>
+
+    <script src="../common/sylvester.js" type="text/javascript"></script>
+    <script src="../common/glUtils.js" type="text/javascript"></script>
+
+    <script type="text/javascript" src="../common/initializeWebGL.js"></script>
+    <script type="text/javascript" src="../common/webgl-utils.js"></script>
+    <script type="text/javascript" src="../common/keyinput.js"></script>
+
+
+    <script type="text/javascript" src="../common/basics.js"></script>
+    <script type="text/javascript" src="../common/cube.js"></script>
+    <script type="text/javascript" src="maze.js"></script>
+
+
+    <script type="text/javascript" src="script.js"></script><!--last to load is the main-->
+</head>
+<body>
+<body onload="webGLStart()">
+<canvas id="gl-canvas" width="512" height="512">
+    Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+<h1>Use the W key to move forward, the S key to move backwards, the arrow keys to look around the and spacebar to jump</h1>
+</body>
+</body>
+</html>

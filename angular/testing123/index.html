@@ -1,0 +1,238 @@
+<html>
+
+<head>
+    <title>Learning WebGL &mdash; lesson 6</title>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+    <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="webgl-utils.js"></script>
+    <script type="text/javascript" src="../common/initializeWebGL.js"></script>
+    <script type="text/javascript" src="../dragon/Common/MV.js"></script>
+    <script type="text/javascript" src="../common/cube.js"></script>
+    <script type="text/javascript" src="../3dmaze/maze.js"></script>
+
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec2 vTextureCoord;
+        uniform sampler2D uSampler;
+        void main(void) {
+            gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        }
+    </script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        varying vec2 vTextureCoord;
+        void main(void) {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vTextureCoord = aTextureCoord;
+        }
+    </script>
+
+
+    <script type="text/javascript">
+
+        var xRot = 0;
+        var xSpeed = 0;
+        var yRot = 0;
+        var ySpeed = 0;
+        var z = -5.0;
+        var filter = 0;
+        var currentlyPressedKeys = {};
+        function handleKeyDown(event) {
+            currentlyPressedKeys[event.keyCode] = true;
+            if (String.fromCharCode(event.keyCode) == "F") {
+                filter += 1;
+                if (filter == 3) {
+                    filter = 0;
+                }
+            }
+        }
+        function handleKeyUp(event) {
+            currentlyPressedKeys[event.keyCode] = false;
+        }
+        function handleKeys() {
+            if (currentlyPressedKeys[33] || currentlyPressedKeys[48]) {
+                // Page Up
+                z -= 0.05;
+            }
+            if (currentlyPressedKeys[34] || currentlyPressedKeys[57]) {
+                // Page Down
+                z += 0.05;
+            }
+            if (currentlyPressedKeys[37]) {
+                // Left cursor key
+                ySpeed -= 1;
+            }
+            if (currentlyPressedKeys[39]) {
+                // Right cursor key
+                ySpeed += 1;
+            }
+            if (currentlyPressedKeys[38]) {
+                // Up cursor key
+                xSpeed -= 1;
+            }
+            if (currentlyPressedKeys[40]) {
+                // Down cursor key
+                xSpeed += 1;
+            }
+        }
+
+        var objects = [];
+
+        function initBuffers() {
+            var m = new Maze(10,10);
+
+            for(var i = 0; i<m.cells.length; i++)
+                for(var j = 0; j<m.cells[i].length; j++)
+                    m.drawCell(m.cells[i][j]);
+
+//            var m = new Maze(2,1);
+//            m.drawCell(new Cell(0,0));
+//            objects = m.objects;
+        }
+
+        function drawScene() {
+            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+
+            mat4.identity(mvMatrix);
+            mat4.translate(mvMatrix, [0.0, 0.0, z]);
+            mat4.rotate(mvMatrix, degToRad(xRot), [1, 0, 0]);
+            mat4.rotate(mvMatrix, degToRad(yRot), [0, 1, 0]);
+
+            for(var i = 0; i<objects.length; i++) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, objects[i].cubeVertexPositionBuffer);
+                gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute,
+                        objects[i].cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER,objects[i].cubeVertexTextureCoordBuffer);
+                gl.vertexAttribPointer(shaderProgram.textureCoordAttribute,objects[i].cubeVertexTextureCoordBuffer.itemSize
+                        , gl.FLOAT, false, 0, 0);
+
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, objects[i].texture);
+                gl.uniform1i(shaderProgram.samplerUniform, 0);
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,objects[i].cubeVertexIndexBuffer);
+                setMatrixUniforms();
+                gl.drawElements(gl.TRIANGLES,objects[i].cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+            }
+        }
+        //Create a cell at x,y location
+        function Cell(x,y) {
+            this.x = x;
+            this.y = y;
+
+            //which walls are up on this cell
+            this.walls = {
+                left : true,
+                right : true,
+                up : true,
+                down : true
+            };
+
+            //have we visited this cell yet
+            this.visited = false;
+        }
+
+        var lastTime = 0;
+        function animate() {
+            var timeNow = new Date().getTime();
+            if (lastTime != 0) {
+                var elapsed = timeNow - lastTime;
+                xRot += (xSpeed * elapsed) / 1000.0;
+                yRot += (ySpeed * elapsed) / 1000.0;
+            }
+            lastTime = timeNow;
+        }
+
+        function tick() {
+            requestAnimFrame(tick);
+            handleKeys();
+            drawScene();
+            animate();
+        }
+        var textures = {
+            wall: null,
+            floor: null,
+            ceiling: null,
+        };
+        function handleLoadedTexture(texture) {
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+        }
+        function initTexture(imagesrc) {
+            var mudTexture;
+            mudTexture = gl.createTexture();
+            mudTexture.image = new Image();
+            mudTexture.image.onload = function () {
+                handleLoadedTexture(mudTexture)
+            };
+            mudTexture.image.src = imagesrc;
+            return mudTexture;
+        }
+        var mazeDraw = false;
+        function webGLStart() {
+            fullInitialize();
+            var images = [
+                "../3dmaze/resources/cubetexture.png", //wall
+                "../3dmaze/resources/tile.jpg", //ceiling
+                "../3dmaze/resources/ceiling.png", //floor
+            ];
+            for(var i = 0; i<images.length; i++)
+                switch (i) {
+                    case 0:
+                        textures.wall = initTexture(images[i]);
+                        break;
+                    case 1:
+                        textures.ceiling = initTexture(images[i]);
+                        break;
+                    case 2:
+                        textures.floor = initTexture(images[i]);
+                        break;
+                }
+
+
+//            initBuffers();
+
+            if(!mazeDraw) {
+                var m = new Maze(10, 10);
+                var v = m.drawMaze();
+                for(var i = 0; i<v.length; i++)
+                    objects.push(v[i]);
+            }
+
+            document.onkeydown = handleKeyDown;
+            document.onkeyup = handleKeyUp;
+            tick();
+        }
+    </script>
+
+
+</head>
+
+
+<body onload="webGLStart();">
+<canvas id="gl-canvas" style="border: none;" width="500" height="500"></canvas>
+
+<h2>Controls:</h2>
+
+<ul>
+    <li><code>0,Page Up</code>/<code>9,Page Down</code> to zoom out/in
+    <li>Cursor keys: make the cube rotate (the longer you hold down a cursor key, the more it accelerates)
+    <li><code>F</code> to toggle through three different kinds of texture filters
+</ul>
+
+<br/>
+</body>
+
+</html>

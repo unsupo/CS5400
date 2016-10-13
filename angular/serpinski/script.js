@@ -18,12 +18,25 @@ function White(numItems) {
     return colorArray;
 };function Color(colorArrays, neededSize) {
     var tempArray = [];
-    for(var i = 0; i<neededSize*4; i++)
+    for(var i = 0; i<neededSize; i++)
         tempArray = tempArray.concat(colorArrays[i%colorArrays.length]);
     tempArray.itemSize = 4;
     tempArray.numItems = neededSize;
     return tempArray;
 }
+function ColorLightToDark(colorArrays, neededSize) {
+    var tempArray = [];
+    var k = 0;
+    for(var i = 0; i<neededSize; i++) {
+        if(i > neededSize/colorArrays.length*(k+1))
+            k++;
+        tempArray = tempArray.concat(colorArrays[k]);
+    }
+    tempArray.itemSize = 4;
+    tempArray.numItems = neededSize;
+    return tempArray;
+}
+
 function dupeArray(dupeCount, array){
     var tempArray = array;
     for(var i = 0; i<dupeCount; i++)
@@ -224,66 +237,272 @@ function tick() {
     }
 }
 var tickArray = [];
+var values = [];
+var color;
 function drawLocalScene() {
     drawScene();
 
     var vertice = [
-        vec2( -1, -1 ),
-        vec2(  0,  1 ),
-        vec2(  1, -1 )
+        vec3(0, 1, 0),
+        vec3(Math.sqrt(3)/2, 0, -0.5),
+        vec3(-Math.sqrt(3)/2, 0, -0.5),
+        vec3(0, 0, 1)
+        // vec3(  0,  1 , 0), // top middle
+        // vec3( -1, 0, -1), // bottom left back
+        // vec3(  -1, 0, 1), //bottom left front
+        // vec3(  1, 0, -1), // bottom right front
+        // vec3(  1, 0, 1) // bottom right front
     ];
 
-    if(points.length == 0)
-        divideTriangle( vertice[0], vertice[1], vertice[2],
-                    NumTimesToSubdivide);
+    if (values.length == 0) {
+        divideTriangle3dMemoize(vertice[0], vertice[1], vertice[2],vertice[3],//vertice[4],
+            NumTimesToSubdivide);
+        randomizeArray(pointsArray);
+        // for (var i = 0; i < pointsArray.length; i++)
+        //     values = values.concat(pointsArray[i]);
+        for (var i = 0; i < triangleArray.length; i++)
+            values = values.concat(pointsArray[triangleArray[i]]);
 
-    var values = [];
-    for(var i = 0; i<points.length; i++)
-        values = values.concat(points[i]);
-
+        // color = ColorLightToDark([[1,1,1,1],[.63,.23,.01,1],[0,0,0,1]],values.length);
+        color = Color([[.23,.19,.89,1],[.63,.23,.01,1],[.91,.3,.3,1]],values.length);
+    }
     var rotation = [0,1,0];
     rotation.degrees = 0;
     rotation.rotateMatrix = [0,1,0];
-    rotation.amount = 40;
+    rotation.amount = 30;
     if(tickArray.length == 0)
         tickArray.push(rotation);
 
-    drawArrayOfVertices(vertices(values,2,gl.TRIANGLES),
-        [0.0, 0.0, -4.0],
-        Color([[.23,.19,.89,1],[.63,.23,.01,1],[.91,.3,.3,1]],points.length),
+    drawArrayOfVertices(vertices(values,3,gl.TRIANGLES),
+        [0.0, -0.4, -3.0],
+        color,
         tickArray[0]);
 
 }
 
-function triangle( a, b, c )
-{
+function triangle2d( a, b, c ){
     points.push( a, b, c );
+}function triangle3d( a, b, c, d, e ){
+    points.push(
+        a, b, c, a,
+        b, c, a, b,
+        c, e, a, c,
+        d, b, a, d,
+        e, d, a, e
+        // b, c, d, b
+        // e,d,c,e
+    );
+}function triangle(pointsArray) { //does not fill in the bottom of a 3d object
+    if(pointsArray.length === 3)
+        for(var i = 0; i < pointsArray.length;  i++)
+            points.push(pointsArray[i]);
+    else
+        for(var i=0; i<pointsArray.length; i++)
+            points.push(pointsArray[i],pointsArray[i+1],pointsArray[i===0?i+2:0],pointsArray[i]);
 }
-var NumTimesToSubdivide = 5;
+function randomNumber(min,max) {
+    var temp;
+    if(min > max){
+        temp = min;
+        min = max;
+        max = temp;
+    }
+    return Math.random() * (max - min) + min;
+}
+var NumTimesToSubdivide = 4; //5 for 2d
+var randomize = [0.1,0.1,0.1];//[.01,.1,.1]; //.04 for 2d
+var shrinkPercent = 200;//%
 var points = [];
-function divideTriangle( a, b, c, count )
-{
+function sierpinski(a,b,c,count){
+    if(count === 0)
+        return triangle(a,b,c);
 
+}
+function randomizeArray(combo) {
+    var count = 1;
+    for(var i = 0; i<randomize.length; i++)
+        randomize[i]/=1+1/(count*shrinkPercent/100);
+    for(var i = 0; i<combo.length; i++)
+        for(var j = 0; j<combo[i].length; j++)
+            combo[i][j] = randomNumber(combo[i][j]-randomize[j], combo[i][j]+randomize[j]);
+    return combo;
+}
+
+var pointsArray = [];
+var triangleArray = [];
+function divideTriangle3dMemoize( a, b, c, d, count ){
+    // check for end of recursion
+    if ( count === 0 )
+        return triangleArray.push(
+            arrayIndexOf(pointsArray,a),arrayIndexOf(pointsArray,b),arrayIndexOf(pointsArray,c),
+            arrayIndexOf(pointsArray,a),arrayIndexOf(pointsArray,c),arrayIndexOf(pointsArray,d),
+            arrayIndexOf(pointsArray,a),arrayIndexOf(pointsArray,d),arrayIndexOf(pointsArray,b));
+
+    //bisect the sides
+    var ab = mix( a, b, 0.5 );
+    var ac = mix( a, c, 0.5 );
+    var ad = mix( a, d, 0.5 );
+
+    var bc = mix( b, c, 0.5 );
+    var bd = mix( b, d, 0.5 );
+
+    var cd = mix( c, d, 0.5 );
+
+    var p = [a,b,c,d,ab,ac,ad,bc,bd,cd];
+    for(var i = 0; i<p.length; i++) {
+        for(var j = 0; j<p[i].length; j++)
+            p[i][j] = parseFloat(p[i][j].toFixed(4));
+        if (arrayIndexOf(pointsArray,p[i]) < 0)
+            pointsArray.push(p[i]);
+    }
+    --count;
+
+    a = p[0]; b = p[1]; c = p[2]; d = p[3];
+    ab = p[4]; ac = p[5]; ad = p[6]; bc = p[7]; bd = p[8]; cd = p[9];
+
+    // three new triangles
+    divideTriangle3dMemoize( a, ad, ab, ac, count );
+    divideTriangle3dMemoize( b, ab, bd, bc, count );
+    divideTriangle3dMemoize( c, bc, ac, cd, count );
+    divideTriangle3dMemoize( d, bd, cd, ad, count );
+
+    //fill in inside with gaskets
+    divideTriangle2dMemoize( ab, bd, ad, count );
+    divideTriangle2dMemoize( bc, ab, ac, count );
+    divideTriangle2dMemoize( cd, ad, ac, count );
+}
+function arrayIndexOf(array, item) {
+    for (var i = 0; i < array.length; i++){
+        var v = true;
+        for(var j = 0; j<array[i].length; j++)
+            v&=array[i][j] === item[j];
+        if(v)
+            return i;
+    }
+    return -1;   // Not found
+}
+function divideTriangle2dMemoize( a, b, c, count ){
+    // check for end of recursion
+    if ( count === 0 )
+        return triangleArray.push(arrayIndexOf(pointsArray,a),arrayIndexOf(pointsArray,b),arrayIndexOf(pointsArray,c));
+
+    //bisect the sides
+    var ab = mix( a, b, 0.5 );
+    var ac = mix( a, c, 0.5 );
+    var bc = mix( b, c, 0.5 );
+
+    var p = [a,b,c,ab,ac,bc];
+    for(var i = 0; i<p.length; i++) {
+        for(var j = 0; j<p[i].length; j++)
+            p[i][j] = parseFloat(p[i][j].toFixed(4));
+        if (arrayIndexOf(pointsArray,p[i]) < 0)
+            pointsArray.push(p[i]);
+    }
+
+    --count;
+
+    // three new triangles
+    divideTriangle2dMemoize( p[0], p[0+3], p[1+3], count );
+    divideTriangle2dMemoize( p[2], p[1+3], p[2+3], count );
+    divideTriangle2dMemoize( p[1], p[2+3], p[0+3], count );
+
+    //fill in the triangle
+    divideTriangle2dMemoize( p[1+3], p[2+3], p[0+3], count );
+}
+function divideTriangle2d( a, b, c, count ){
+    // check for end of recursion
+
+    if ( count === 0 )
+        return triangle2d( a, b, c );
+
+    //bisect the sides
+    var ab = mix( a, b, 0.5 );
+    var ac = mix( a, c, 0.5 );
+    var bc = mix( b, c, 0.5 );
+
+    for(var i = 0; i<randomize.length; i++)
+        randomize[i]/=1+1/(count*shrinkPercent/100);
+    var combo = [ab,ac,bc];
+    for(var i = 0; i<combo.length; i++)
+        for(var j = 0; j<combo[i].length; j++)
+            combo[i][j] = randomNumber(combo[i][j]-randomize[j], combo[i][j]+randomize[j]);
+
+    --count;
+    // three new triangles
+    divideTriangle2d( a, combo[0], combo[1], count );
+    divideTriangle2d( c, combo[1], combo[2], count );
+    divideTriangle2d( b, combo[2], combo[0], count );
+
+    //fill in the triangle
+    // triangle(combo.reverse());
+}
+function divideTriange(pointArray, divisionCount) {
+    if(divisionCount === 0)
+        return triangle(pointArray);
+    var points = [];
+    var options = [];
+    for(var i = 0; i<pointArray.length; i++)
+        for(var j = i; j<pointArray.length; j++){
+            if(options.contains([i,j]))
+                continue;
+            options.push([i,j]);
+            points.push(mix(pointArray[i],pointArray[j],0.5));
+        }
+
+    for(var i = 0; i<points.length; i++)
+        for(var j = 0; j<points[i].length; j++)
+            points[i][j] = randomNumber(points[i][j]-randomize, points[i][j]+randomize);
+
+    divisionCount--;
+    for(var i = 0; i<pointArray.length; i++) {
+        var divideArray = [pointArray[i]];
+        for (var j = 0; j < pointArray.length; j++)
+            divideArray.push();
+        divideTriange(divideArray, divisionCount);
+    }
+
+}
+
+function divideTriangle3d( a, b, c, d, e, count ){
     // check for end of recursion
 
     if ( count === 0 ) {
-        triangle( a, b, c );
+        triangle3d( a, b, c, d, e );
     }
     else {
-
         //bisect the sides
-
         var ab = mix( a, b, 0.5 );
         var ac = mix( a, c, 0.5 );
+        var ad = mix( a, d, 0.5 );
+        var ae = mix( a, e, 0.5 );
+
         var bc = mix( b, c, 0.5 );
+        var bd = mix( b, d, 0.5 );
+
+        var ed = mix( e, d, 0.5 );
+        var ec = mix( e, c, 0.5 );
+
+        var mid = mix(b,e,0.5)
+
+        var combo = [ab,ac,ad,ae,bc,bd,ec,ed,mid];
+        for(var i = 0; i<combo.length; i++)
+            for(var j = 0; j<combo[i].length; j++)
+                combo[i][j] = randomNumber(combo[i][j]-randomize, combo[i][j]+randomize);
 
         --count;
 
         // three new triangles
-
-        divideTriangle( a, ab, ac, count );
-        divideTriangle( c, ac, bc, count );
-        divideTriangle( b, bc, ab, count );
+        // too slow
+        divideTriangle3d( a, combo[0], combo[1], combo[2], combo[3], count );
+        divideTriangle3d( b, combo[0], combo[4], combo[5], combo[8], count );
+        divideTriangle3d( c, combo[1], combo[4], combo[6], combo[8], count );
+        divideTriangle3d( d, combo[2], combo[5], combo[7], combo[8], count );
+        divideTriangle3d( e, combo[3], combo[6], combo[7], combo[8], count );
+        // divideTriangle3d( a, combo[0], combo[1], combo[2], combo[3], count );
+        // divideTriangle2d( b, combo[0], combo[4], count );
+        // divideTriangle2d( c, combo[1], combo[4], count );
+        // divideTriangle2d( d, combo[2], combo[5], count );
+        // divideTriangle2d( e, combo[3], combo[6], count );
     }
 }
 
