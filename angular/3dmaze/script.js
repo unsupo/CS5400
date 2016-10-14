@@ -73,7 +73,6 @@ var ySpeed = 0;
 var jump = false;
 var fly = false;
 var spaceKeyPressTime = -1;
-var spaceBarPressCount = 0;
 
 function handleKeys() {
     pitchRate = 0;
@@ -106,51 +105,51 @@ function handleKeys() {
 
     if(KeyInput.isPressed(KeyInput.KEY_NAMES.SPACE)) {
         var now = new Date().getTime();
+        var key = currentlyPressedKeysObjects[KeyInput.KEY_NAMES.SPACE];
         if(spaceKeyPressTime < 0 || now - spaceKeyPressTime > 1000) {
             jump = true;
             spaceKeyPressTime = now;
         }
+        if(key.consecutiveCount == 2) {
+            console.log("DOUBLE PRESSED");
+            key.consecutiveCount = 0;
+            jump = false;
+            fly = true;
+        }
 
-        // if(++spaceBarPressCount > 8)
-        //     spaceBarPressCount=0;
-        // if(spaceKeyPressTime<0)
-        //     spaceKeyPressTime = now;
-        // else if(now - spaceKeyPressTime <= 500 && spaceBarPressCount == 8){
-        //     spaceKeyPressTime = -1;
-        //     jump = false;
-        //     if(fly)
-        //         fly = false;
-        //     else
-        //         fly = true;
-        // }
-        // if(fly) {
-        //     jump = false;
-        //     flyHeight = 0.00003;
-        // }
-        // console.log("Space Bar Pressed");
+        if(fly) {
+            jump = false;
+            flyHeight = 0.003;
+        }
+        // console.log(key.downCounter+", "+key.upCounter+", "+key.timeDown+", "+key.timeUp);
+    }else if(KeyInput.isPressed(KeyInput.KEY_NAMES.SHIFT) && fly)
+        flyHeight = -0.003;
+    if(KeyInput.isPressed(KeyInput.KEY_NAMES.ENTER) && fly){
+        fly = false;
+        fall = true;
     }
-    // else if(KeyInput.isPressed(KeyInput.KEY_NAMES.SHIFT) && fly)
-    //     flyHeight = -0.00003;
 
 }
-
+var fall = false;
 var flyHeight;
 var lastTime = 0;
 // Used to make us "jog" up and down as we move forward.
 var joggingAngle = 0;
 var jumpStartTime = -1;
+var fallStartTime = -1;
 
 function animate() {
     var timeNow = new Date().getTime();
     if (lastTime != 0) {
         var elapsed = timeNow - lastTime;
-        if (xSpeed != 0 || ySpeed != 0) {
-            xPos -= xSpeed * elapsed*Math.sin(degToRad(yaw));
-            zPos -= xSpeed * elapsed*Math.cos(degToRad(yaw));
+        if ((xSpeed != 0 || ySpeed != 0) && !fall) {
+            xPos -= xSpeed * elapsed*Math.sin(degToRad(yaw))+ySpeed * elapsed*Math.sin(degToRad(yaw+90));//strafe is 90 degress of this
+            zPos -= xSpeed * elapsed*Math.cos(degToRad(yaw))+ySpeed * elapsed*Math.cos(degToRad(yaw+90));
             joggingAngle += elapsed * 0.4; // 0.6 "fiddle factor" - makes it feel more realistic :-)
-            // if(!fly)
+            if(!fly && !jump)
                 yPos =yOfGround +  Math.sin(degToRad(joggingAngle)) / 20; //y moves up and down in a sin wave
         }
+        var gravity = .1;
         if(jump){
             if(jumpStartTime < 0)
                 jumpStartTime = timeNow;
@@ -165,9 +164,20 @@ function animate() {
                 jumpStartTime = -1;
                 jump = false;
             }
+        }else if(fly)
+            yPos += flyHeight * elapsed;
+        else if(fall){
+            if(fallStartTime < 0)
+                fallStartTime = timeNow;
+            var t = timeNow - fallStartTime;
+            t/=1000; //change from milliseconds to seconds
+            yPos -= gravity*Math.pow(t,2);
+            if(yPos <= yOfGround){
+                yPos = yOfGround;
+                fall = false;
+                fallStartTime = -1;
+            }
         }
-            // else if(fly)
-        //     yPos += flyHeight * elapsed;
 
         yaw += yawRate * elapsed;
         pitch += pitchRate * elapsed;

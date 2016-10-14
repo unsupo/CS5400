@@ -9,12 +9,42 @@ KeyInput.isPressed = function (key) {
     return currentlyPressedKeys[key];
 }
 
+var currentlyPressedKeysObjects = new Array(100);
 var currentlyPressedKeys = {};
 function handleKeyDown(event) {
+    var obj = new KeyInput();
+    obj.downCounter = 0;
+    obj.upCounter = 0;
+    obj.keyCode = event.keyCode;
+    obj.consecutiveCountArr = [];
+    obj.consecutiveCount = 0;
+    if(currentlyPressedKeysObjects[event.keyCode])
+        obj = currentlyPressedKeysObjects[event.keyCode];
+    var date = new Date().getTime();
+    var splice = [];
+    for(var i = 0; i<obj.consecutiveCountArr.length; i++)
+        if(date - obj.timeDown < 500)
+            splice.push(obj.consecutiveCountArr[i]);
+    obj.consecutiveCountArr = splice;
+    obj.consecutiveCount = obj.consecutiveCountArr.length+1;
+
+    obj.timeDown = new Date().getTime();
+    obj.downCounter++;
     currentlyPressedKeys[event.keyCode] = true;
+    obj.consecutiveCountArr.push(obj);
+    currentlyPressedKeysObjects[event.keyCode] = obj;
 }
 function handleKeyUp(event) {
+    var obj = new KeyInput();
+    obj.keyCode = event.keyCode;
+    obj.upCounter = 0;
+    obj.downCounter = 0;
+    if(currentlyPressedKeysObjects[event.keyCode])
+        obj = currentlyPressedKeysObjects[event.keyCode];
+    obj.timeUp = new Date().getTime();
+    obj.upCounter++;
     currentlyPressedKeys[event.keyCode] = false;
+    currentlyPressedKeysObjects[event.keyCode] = obj;
 }
 KeyInput.setUpKeys = function () {
     document.onkeydown = handleKeyDown;
