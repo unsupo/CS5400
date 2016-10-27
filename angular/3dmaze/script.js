@@ -58,7 +58,6 @@ function tick() {
 
 
 var height = 3;
-var timeOfJump = 1;//in seconds
 var yOfGround = 0.4;
 
 var pitch = 0;
