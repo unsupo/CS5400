@@ -33,7 +33,7 @@
     "jshint-stylish": "^2.2.1",
     "matchdep": "^1.0.1",
     "minimatch": "^3.0.3",
-    "npm": "^3.10.7",
+    "npm": "^6.13.6",
     "webgl-context": "^2.2.0",
     "webgl-enabled": "^1.0.3",
     "webpack": "^1.13.2"
